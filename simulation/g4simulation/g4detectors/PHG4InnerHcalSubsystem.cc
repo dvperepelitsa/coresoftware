@@ -1,31 +1,48 @@
 #include "PHG4InnerHcalSubsystem.h"
+
 #include "PHG4HcalDefs.h"
 #include "PHG4InnerHcalDetector.h"
+#include "PHG4InnerHcalDisplayAction.h"
 #include "PHG4InnerHcalSteppingAction.h"
-#include "PHG4Parameters.h"
 
+#include <phparameter/PHParameters.h>
+
+#include <g4main/PHG4DisplayAction.h>     // for PHG4DisplayAction
 #include <g4main/PHG4HitContainer.h>
+#include <g4main/PHG4SteppingAction.h>    // for PHG4SteppingAction
 
-#include <pdbcalbase/PdbParameterMap.h>
-
+#include <phool/PHCompositeNode.h>
+#include <phool/PHIODataNode.h>           // for PHIODataNode
+#include <phool/PHNode.h>                 // for PHNode
+#include <phool/PHNodeIterator.h>         // for PHNodeIterator
+#include <phool/PHObject.h>               // for PHObject
 #include <phool/getClass.h>
-
-#include <Geant4/globals.hh>
 
 #include <boost/foreach.hpp>
 
+#include <cmath>                         // for NAN
+#include <iostream>                       // for operator<<, basic_ostream
 #include <set>
 #include <sstream>
+
+class PHG4Detector;
 
 using namespace std;
 
 //_______________________________________________________________________
 PHG4InnerHcalSubsystem::PHG4InnerHcalSubsystem(const std::string &name, const int lyr)
   : PHG4DetectorSubsystem(name, lyr)
-  , detector_(nullptr)
-  , steppingAction_(nullptr)
+  , m_Detector(nullptr)
+  , m_SteppingAction(nullptr)
+  , m_DisplayAction(nullptr)
 {
   InitializeParameters();
+}
+
+//_______________________________________________________________________
+PHG4InnerHcalSubsystem::~PHG4InnerHcalSubsystem()
+{
+  delete m_DisplayAction;
 }
 
 //_______________________________________________________________________
@@ -34,10 +51,13 @@ int PHG4InnerHcalSubsystem::InitRunSubsystem(PHCompositeNode *topNode)
   PHNodeIterator iter(topNode);
   PHCompositeNode *dstNode = dynamic_cast<PHCompositeNode *>(iter.findFirst("PHCompositeNode", "DST"));
 
+  // create display settings before detector
+  m_DisplayAction = new PHG4InnerHcalDisplayAction(Name());
+
   // create detector
-  detector_ = new PHG4InnerHcalDetector(topNode, GetParams(), Name());
-  detector_->SuperDetector(SuperDetector());
-  detector_->OverlapCheck(CheckOverlap());
+  m_Detector = new PHG4InnerHcalDetector(this, topNode, GetParams(), Name());
+  m_Detector->SuperDetector(SuperDetector());
+  m_Detector->OverlapCheck(CheckOverlap());
   set<string> nodes;
   if (GetParams()->get_int_param("active"))
   {
@@ -83,14 +103,14 @@ int PHG4InnerHcalSubsystem::InitRunSubsystem(PHCompositeNode *topNode)
     }
 
     // create stepping action
-    steppingAction_ = new PHG4InnerHcalSteppingAction(detector_, GetParams());
+    m_SteppingAction = new PHG4InnerHcalSteppingAction(m_Detector, GetParams());
   }
   else
   {
     // if this is a black hole it does not have to be active
     if (GetParams()->get_int_param("blackhole"))
     {
-      steppingAction_ = new PHG4InnerHcalSteppingAction(detector_, GetParams());
+      m_SteppingAction = new PHG4InnerHcalSteppingAction(m_Detector, GetParams());
     }
   }
   return 0;
@@ -101,9 +121,9 @@ int PHG4InnerHcalSubsystem::process_event(PHCompositeNode *topNode)
 {
   // pass top node to stepping action so that it gets
   // relevant nodes needed internally
-  if (steppingAction_)
+  if (m_SteppingAction)
   {
-    steppingAction_->SetInterfacePointers(topNode);
+    m_SteppingAction->SetInterfacePointers(topNode);
   }
   return 0;
 }
@@ -112,13 +132,13 @@ void PHG4InnerHcalSubsystem::Print(const string &what) const
 {
   cout << Name() << " Parameters: " << endl;
   GetParams()->Print();
-  if (detector_)
+  if (m_Detector)
   {
-    detector_->Print(what);
+    m_Detector->Print(what);
   }
-  if (steppingAction_)
+  if (m_SteppingAction)
   {
-    steppingAction_->Print(what);
+    m_SteppingAction->Print(what);
   }
 
   return;
@@ -127,7 +147,7 @@ void PHG4InnerHcalSubsystem::Print(const string &what) const
 //_______________________________________________________________________
 PHG4Detector *PHG4InnerHcalSubsystem::GetDetector(void) const
 {
-  return detector_;
+  return m_Detector;
 }
 
 void PHG4InnerHcalSubsystem::SetDefaultParameters()
@@ -148,25 +168,25 @@ void PHG4InnerHcalSubsystem::SetDefaultParameters()
   set_default_double_param("scinti_gap_neighbor", 0.1);
   set_default_double_param("scinti_inner_gap", 0.85);
   set_default_double_param("scinti_outer_gap", 1.22 * (5.0 / 4.0));
-// some math issue in the code subtracts 0.4mm so the scintillator
-// does not end at 133.09 as per drawing but at 133.05
-// adding 0.4mm compensates for this (so 133.13 gives the desired 133.09
+  // some math issue in the code subtracts 0.4mm so the scintillator
+  // does not end at 133.09 as per drawing but at 133.05
+  // adding 0.4mm compensates for this (so 133.13 gives the desired 133.09
   set_default_double_param("scinti_outer_radius", 133.13);
   set_default_double_param("scinti_tile_thickness", 0.7);
   set_default_double_param("size_z", 175.94 * 2);
   set_default_double_param("steplimits", NAN);
   set_default_double_param("tilt_angle", 36.15);  // engineering drawing
-// corresponds very closely to 4 crossinge (35.5497 deg)
+                                                  // corresponds very closely to 4 crossinge (35.5497 deg)
 
   set_default_int_param("light_scint_model", 1);
-// if ncross is set (and tilt_angle is NAN) tilt_angle is calculated 
-// from number of crossings
-  set_default_int_param("ncross", 0); 
+  // if ncross is set (and tilt_angle is NAN) tilt_angle is calculated
+  // from number of crossings
+  set_default_int_param("ncross", 0);
   set_default_int_param(PHG4HcalDefs::n_towers, 64);
   set_default_int_param(PHG4HcalDefs::scipertwr, 4);
   set_default_int_param(PHG4HcalDefs::n_scinti_tiles, 12);
 
-  set_default_string_param("material", "SS310");
+  set_default_string_param("material", "G4_Al");
 }
 
 void PHG4InnerHcalSubsystem::SetLightCorrection(const double inner_radius, const double inner_corr, const double outer_radius, const double outer_corr)

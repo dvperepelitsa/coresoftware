@@ -9,14 +9,17 @@
  */
 
 #include "PHG4CylinderGeom_Spacalv2.h"
-#include "PHG4Parameters.h"
 
-#include <Geant4/globals.hh>
+#include <phparameter/PHParameters.h>
+
 #include <Geant4/G4PhysicalConstants.hh>
 
-#include <cmath>
+#include <CLHEP/Units/SystemOfUnits.h>    // for twopi, halfpi, pi
 
+#include <cmath>
+#include <cstdlib>                       // for exit
 #include <iostream>
+
 
 using namespace std;
 
@@ -79,7 +82,7 @@ PHG4CylinderGeom_Spacalv2::SetDefault()
 }
 
 void
-PHG4CylinderGeom_Spacalv2::ImportParameters(const PHG4Parameters & param)
+PHG4CylinderGeom_Spacalv2::ImportParameters(const PHParameters & param)
 {
   PHG4CylinderGeom_Spacalv1::ImportParameters(param);
 

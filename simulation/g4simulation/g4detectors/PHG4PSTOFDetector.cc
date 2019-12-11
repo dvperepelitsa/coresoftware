@@ -1,31 +1,34 @@
 #include "PHG4PSTOFDetector.h"
-#include "PHG4Parameters.h"
-#include "PHG4ParametersContainer.h"
 
-#include <g4main/PHG4Utils.h>
+#include <phparameter/PHParameters.h>
+#include <phparameter/PHParametersContainer.h>
 
-#include <phool/PHCompositeNode.h>
-#include <phool/PHIODataNode.h>
-#include <phool/getClass.h>
+#include <g4main/PHG4Detector.h>  // for PHG4Detector
 
 #include <Geant4/G4Box.hh>
+#include <Geant4/G4Colour.hh>
 #include <Geant4/G4LogicalVolume.hh>
 #include <Geant4/G4Material.hh>
 #include <Geant4/G4PVPlacement.hh>
+#include <Geant4/G4RotationMatrix.hh>  // for G4RotationMatrix
+#include <Geant4/G4String.hh>          // for G4String
 #include <Geant4/G4SystemOfUnits.hh>
-
-#include <Geant4/G4Colour.hh>
+#include <Geant4/G4ThreeVector.hh>  // for G4ThreeVector
 #include <Geant4/G4VisAttributes.hh>
 
 #include <cmath>
+#include <iostream>  // for operator<<, endl, bas...
+#include <utility>   // for pair
+
+class PHCompositeNode;
 
 using namespace std;
 
-PHG4PSTOFDetector::PHG4PSTOFDetector(PHCompositeNode *Node, PHG4ParametersContainer *params, const std::string &dnam)
-  : PHG4Detector(Node, dnam)
+PHG4PSTOFDetector::PHG4PSTOFDetector(PHG4Subsystem *subsys, PHCompositeNode *Node, PHParametersContainer *params, const std::string &dnam)
+  : PHG4Detector(subsys, Node, dnam)
   , paramscontainer(params)
 {
-  const PHG4Parameters *par = paramscontainer->GetParameters(-1);
+  const PHParameters *par = paramscontainer->GetParameters(-1);
   IsActive = par->get_int_param("active");
   IsAbsorberActive = par->get_int_param("absorberactive");
   nmod = par->get_int_param("modules");
@@ -47,7 +50,7 @@ int PHG4PSTOFDetector::IsInPSTOF(G4VPhysicalVolume *volume) const
   return 0;
 }
 
-void PHG4PSTOFDetector::Construct(G4LogicalVolume *logicWorld)
+void PHG4PSTOFDetector::ConstructMe(G4LogicalVolume *logicWorld)
 {
   G4Material *Glass = G4Material::GetMaterial("G4_GLASS_PLATE");
   G4Box *pstof_box = new G4Box("pstof_box", 0.8 * cm, 6 * cm, 5 * cm);
@@ -66,7 +69,7 @@ void PHG4PSTOFDetector::Construct(G4LogicalVolume *logicWorld)
 
     for (int imod = 0; imod < nmod; imod++)
     {
-      const PHG4Parameters *par = paramscontainer->GetParameters(imod);
+      const PHParameters *par = paramscontainer->GetParameters(imod);
       double z = NAN;
       double r = NAN;
       if (rowtype == 0)
@@ -92,11 +95,11 @@ void PHG4PSTOFDetector::Construct(G4LogicalVolume *logicWorld)
       double y = r * sin(phi);
 
       int modnum = nmod * irow + imod;
-      G4VPhysicalVolume *vol = new G4PVPlacement(rotm, G4ThreeVector(x, y, z), pstof_log_vol, "PSTOF", logicWorld, false, modnum, overlapcheck);
+      G4VPhysicalVolume *vol = new G4PVPlacement(rotm, G4ThreeVector(x, y, z), pstof_log_vol, "PSTOF", logicWorld, false, modnum, OverlapCheck());
       if (IsActive)
       {
-	active_phys_vols[vol] = modnum;
-//        active_phys_vols.insert(vol);
+        active_phys_vols[vol] = modnum;
+        //        active_phys_vols.insert(vol);
       }
     }
   }

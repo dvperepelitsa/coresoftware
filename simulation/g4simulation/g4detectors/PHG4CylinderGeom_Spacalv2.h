@@ -1,3 +1,5 @@
+// Tell emacs that this is a C++ source
+//  -*- C++ -*-.
 // $$Id: PHG4CylinderGeom_Spacalv2.h,v 1.3 2014/08/28 22:18:35 jinhuang Exp $$
 
 /*!
@@ -7,12 +9,15 @@
  * \version $$Revision: 1.3 $$
  * \date $$Date: 2014/08/28 22:18:35 $$
  */
-#ifndef PHG4CylinderGeom_Spacalv2_H__
-#define PHG4CylinderGeom_Spacalv2_H__
+#ifndef G4DETECTORS_PHG4CYLINDERGEOMSPACALV2_H
+#define G4DETECTORS_PHG4CYLINDERGEOMSPACALV2_H
 
 #include "PHG4CylinderGeom_Spacalv1.h"
-#include <string>
+
 #include <cmath>
+#include <iostream>                     // for cout, ostream
+
+class PHParameters;
 
 class PHG4CylinderGeom_Spacalv2 : public PHG4CylinderGeom_Spacalv1
 {
@@ -31,8 +36,8 @@ public:
   virtual void
   SetDefault();
 
-  //! load parameters from PHG4Parameters, which interface to Database/XML/ROOT files
-  virtual void ImportParameters(const PHG4Parameters & param);
+  //! load parameters from PHParameters, which interface to Database/XML/ROOT files
+  virtual void ImportParameters(const PHParameters & param);
 
   virtual
   int

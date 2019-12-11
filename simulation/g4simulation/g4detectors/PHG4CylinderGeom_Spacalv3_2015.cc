@@ -9,18 +9,10 @@
  */
 
 #include "PHG4CylinderGeom_Spacalv3.h"
-#include "PHG4Parameters.h"
 
-#include <Geant4/globals.hh>
-#include <Geant4/G4PhysicalConstants.hh>
-
-#include <algorithm>
-#include <cmath>
-#include <cassert>
 #include <iostream>
-#include <sstream>
-#include <limits>       // std::numeric_limits
 #include <map>
+#include <utility>                      // for make_pair
 
 using namespace std;
 using std::make_pair;

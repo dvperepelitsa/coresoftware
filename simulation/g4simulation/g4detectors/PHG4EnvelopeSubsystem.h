@@ -1,18 +1,19 @@
-#ifndef PHG4EnvelopeSubsystem_h
-#define PHG4EnvelopeSubsystem_h
+// Tell emacs that this is a C++ source
+//  -*- C++ -*-.
+#ifndef G4DETECTORS_PHG4ENVELOPESUBSYSTEM_H
+#define G4DETECTORS_PHG4ENVELOPESUBSYSTEM_H
 
 #include <g4main/PHG4Subsystem.h>
-#include <g4main/PHG4Detector.h>
-#include <g4main/PHG4SteppingAction.h>
 
-#include <phool/PHCompositeNode.h>
-
-#include <Geant4/G4Types.hh>
 #include <Geant4/G4String.hh>
 
+#include <string>                  // for string
+
+class PHG4Detector;
 class PHG4EnvelopeDetector;
 class PHG4EnvelopeSteppingAction;
-class PHG4EventAction;
+class PHG4SteppingAction;
+class PHCompositeNode;
 
 class PHG4EnvelopeSubsystem: public PHG4Subsystem
 {
@@ -45,7 +46,6 @@ class PHG4EnvelopeSubsystem: public PHG4Subsystem
 	
 		//Stepping Action
 		PHG4EnvelopeSteppingAction* steppingAction_;
-		PHG4EventAction *eventAction_;
 			
 		G4String material;
 		int active;

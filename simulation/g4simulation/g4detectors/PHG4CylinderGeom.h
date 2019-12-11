@@ -1,12 +1,16 @@
-#ifndef PHG4CylinderGeom_H__
-#define PHG4CylinderGeom_H__
+// Tell emacs that this is a C++ source
+//  -*- C++ -*-.
+#ifndef G4DETECTORS_PHG4CYLINDERGEOM_H
+#define G4DETECTORS_PHG4CYLINDERGEOM_H
 
 #include <phool/PHObject.h>
 
 #include <phool/phool.h>
-#include <cmath>
 
-class PHG4Parameters;
+#include <cmath>
+#include <iostream>          // for cout, ostream
+
+class PHParameters;
 
 class PHG4CylinderGeom: public PHObject
 {
@@ -35,6 +39,8 @@ class PHG4CylinderGeom: public PHObject
 
   virtual void find_segment_center(const int segment_z_bin, const int segment_phi_bin, double location[]){PHOOL_VIRTUAL_WARN("find_sensor_center"); return;}
   virtual void find_strip_center(const int segment_z_bin, const int segment_phi_bin, const int strip_column, const int strip_index, double location[]){PHOOL_VIRTUAL_WARN("find_strip_center"); return;}
+ virtual void find_strip_index_values(const int segment_z_bin, const double ypos, const double zpos, int &strip_y_index, int &strip_z_index){PHOOL_VIRTUAL_WARN("find_strip_index_values"); return;}
+  virtual void find_strip_center_local_coords(const int segment_z_bin, const int strip_y_index, const int strip_z_index, double location[]){PHOOL_VIRTUAL_WARN("find_strip_center_localcoords"); return;}
 
   virtual double get_strip_y_spacing() const {PHOOL_VIRTUAL_WARN("get_strip_y_spacing"); return NAN;}
   virtual double get_strip_z_spacing() const {PHOOL_VIRTUAL_WARN("get_strip_z_spacing"); return NAN;}
@@ -48,8 +54,8 @@ class PHG4CylinderGeom: public PHObject
   virtual double get_pixel_x() const {PHOOL_VIRTUAL_WARN("get_pixel_x"); return NAN;}
   virtual double get_pixel_thickness() const {PHOOL_VIRTUAL_WARN("get_pixel_thickness"); return NAN;}
 
-  //! load parameters from PHG4Parameters, which interface to Database/XML/ROOT files
-  virtual void ImportParameters(const PHG4Parameters & param) {return ;}
+  //! load parameters from PHParameters, which interface to Database/XML/ROOT files
+  virtual void ImportParameters(const PHParameters & param) {return ;}
 
  protected:
   PHG4CylinderGeom() {}

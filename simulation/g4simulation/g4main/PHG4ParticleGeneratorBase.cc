@@ -1,4 +1,6 @@
 #include "PHG4ParticleGeneratorBase.h"
+
+#include "PHG4Particle.h"                  // for PHG4Particle
 #include "PHG4Particlev1.h"
 
 #include "PHG4InEvent.h"
@@ -9,17 +11,29 @@
 #include <phhepmc/PHHepMCGenEventMap.h>
 
 #include <phool/getClass.h>
-#include <phool/recoConsts.h>
-
 #include <phool/PHCompositeNode.h>
-#include <phool/PHIODataNode.h>
+#include <phool/PHDataNode.h>              // for PHDataNode
+#include <phool/PHNode.h>                  // for PHNode
+#include <phool/PHNodeIterator.h>          // for PHNodeIterator
+#include <phool/PHObject.h>                // for PHObject
 #include <phool/PHRandomSeed.h>
+#include <phool/phool.h>                   // for PHWHERE
 
 #include <Geant4/G4ParticleDefinition.hh>
 #include <Geant4/G4ParticleTable.hh>
+#include <Geant4/G4String.hh>              // for G4String
+#include <Geant4/G4SystemOfUnits.hh>
+
+#include <HepMC/SimpleVector.h>            // for FourVector
 
 #include <gsl/gsl_rng.h>
+
 #include <cassert>
+#include <cstdlib>                        // for exit
+#include <iostream>                        // for operator<<, basic_ostream
+#include <iterator>                        // for operator!=, reverse_iterator
+#include <map>                             // for map<>::const_iterator, map
+#include <utility>                         // for pair
 
 using namespace std;
 
@@ -81,7 +95,7 @@ PHG4ParticleGeneratorBase::get_mass(const int pdgcode) const
   G4ParticleDefinition *particledef = particleTable->FindParticle(get_pdgname(pdgcode));
   if (particledef)
   {
-    return particledef->GetPDGMass();
+    return particledef->GetPDGMass() / GeV;
   }
   return 0;
 }
@@ -139,7 +153,7 @@ int PHG4ParticleGeneratorBase::process_event(PHCompositeNode *topNode)
   return 0;
 }
 
-void PHG4ParticleGeneratorBase::Print(const std::string &what) const
+void PHG4ParticleGeneratorBase::PrintParticles(const std::string &what) const
 {
   vector<PHG4Particle *>::const_iterator iter;
   int i = 0;
@@ -219,13 +233,22 @@ int PHG4ParticleGeneratorBase::ReuseExistingVertex(PHCompositeNode *topNode)
 
     if (iter != genevtmap->rend())
     {
-      const PHHepMCGenEvent * hepmc_evt = iter->second;
+      const PHHepMCGenEvent *hepmc_evt = iter->second;
 
       assert(hepmc_evt);
 
       const HepMC::FourVector &vtx = hepmc_evt->get_collision_vertex();
 
       set_vtx(vtx.x(), vtx.y(), vtx.z());
+
+      if (Verbosity() > 0)
+      {
+        cout << "PHG4ParticleGeneratorBase::ReuseExistingVertex - reuse PHHepMCGenEventMap vertex "
+             << vtx.x() << ", " << vtx.y() << ", " << vtx.z() << " cm. Source event:"
+             << endl;
+        hepmc_evt->identify();
+      }
+
       return 1;
     }
   }
@@ -246,7 +269,7 @@ int PHG4ParticleGeneratorBase::ReuseExistingVertex(PHCompositeNode *topNode)
       cout << PHWHERE << "::Error - PHG4SimpleEventGenerator expects an existing vertex in PHG4InEvent, but none exists" << endl;
       exit(1);
     }
-    if (verbosity > 0)
+    if (Verbosity() > 0)
     {
       cout << PHWHERE << "::Info - use this primary vertex from PHG4InEvent:" << endl;
       vtx->identify();
@@ -275,7 +298,7 @@ int PHG4ParticleGeneratorBase::ReuseExistingVertex(PHCompositeNode *topNode)
       exit(1);
     }
 
-    if (verbosity > 0)
+    if (Verbosity() > 0)
     {
       cout << PHWHERE << "::Info - use this primary vertex from PHG4TruthInfoContainer:" << endl;
       vtx->identify();

@@ -9,18 +9,22 @@
  */
 
 #include "PHG4CylinderGeom_Spacalv3.h"
-#include "PHG4Parameters.h"
+#include "PHG4CylinderGeom_Spacalv1.h"    // for PHG4CylinderGeom_Spacalv1::...
 
-#include <Geant4/globals.hh>
+#include <phparameter/PHParameters.h>
+
 #include <Geant4/G4PhysicalConstants.hh>
 
+#include <CLHEP/Units/SystemOfUnits.h>    // for twopi
+
 #include <algorithm>
-#include <cmath>
 #include <cassert>
+#include <cmath>
+#include <cstdlib>                       // for exit
 #include <iostream>
-#include <sstream>
 #include <limits>       // std::numeric_limits
 #include <map>
+#include <sstream>
 
 using namespace std;
 using std::make_pair;
@@ -28,6 +32,11 @@ using std::make_pair;
 PHG4CylinderGeom_Spacalv3::PHG4CylinderGeom_Spacalv3()
 {
   SetDefault();
+}
+
+PHG4CylinderGeom_Spacalv3::~PHG4CylinderGeom_Spacalv3()
+{
+  sector_tower_map.erase(sector_tower_map.begin(), sector_tower_map.end());
 }
 
 void
@@ -100,7 +109,7 @@ PHG4CylinderGeom_Spacalv3::SetDefault()
 }
 
 void
-PHG4CylinderGeom_Spacalv3::ImportParameters(const PHG4Parameters & param)
+PHG4CylinderGeom_Spacalv3::ImportParameters(const PHParameters & param)
 {
   PHG4CylinderGeom_Spacalv2::ImportParameters(param);
 
@@ -260,7 +269,7 @@ PHG4CylinderGeom_Spacalv3::geom_tower::identify(std::ostream& os) const
 
 void
 PHG4CylinderGeom_Spacalv3::geom_tower::ImportParameters(
-    const PHG4Parameters & param, const std::string & param_prefix)
+    const PHParameters & param, const std::string & param_prefix)
 {
 
   id = param.get_int_param(param_prefix + "id");

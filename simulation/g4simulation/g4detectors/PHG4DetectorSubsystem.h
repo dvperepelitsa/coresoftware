@@ -1,13 +1,16 @@
-#ifndef PHG4DetectorSubsystem_h
-#define PHG4DetectorSubsystem_h
+// Tell emacs that this is a C++ source
+//  -*- C++ -*-.
+#ifndef G4DETECTORS_PHG4DETECTORSUBSYSTEM_H
+#define G4DETECTORS_PHG4DETECTORSUBSYSTEM_H
 
 #include <g4main/PHG4Subsystem.h>
 
 #include <map>
 #include <string>
 
-class PHG4Parameters;
-class PHG4ParametersContainer;
+class PHCompositeNode;
+class PHParameters;
+class PHParametersContainer;
 
 class PHG4DetectorSubsystem : public PHG4Subsystem
 {
@@ -18,7 +21,7 @@ class PHG4DetectorSubsystem : public PHG4Subsystem
   virtual ~PHG4DetectorSubsystem() {}
 
   // stupid rootcint does not support final keyword
-#ifndef __CINT__
+#if !defined(__CINT__) || defined(__CLING__)
   int Init(PHCompositeNode *) final;
   int InitRun(PHCompositeNode *) final;
 #else
@@ -32,7 +35,7 @@ class PHG4DetectorSubsystem : public PHG4Subsystem
   void OverlapCheck(const bool chk = true) {overlapcheck = chk;}
   bool CheckOverlap() const {return overlapcheck;}
 
-  PHG4Parameters *GetParams() const {return params;} 
+  PHParameters *GetParams() const {return params;} 
 
  // Get/Set parameters from macro
   void set_double_param(const std::string &name, const double dval);
@@ -77,8 +80,8 @@ class PHG4DetectorSubsystem : public PHG4Subsystem
   int BeginRunExecuted() const {return beginrunexecuted;}
 
  private:
-  PHG4Parameters *params;
-  PHG4ParametersContainer *paramscontainer;
+  PHParameters *params;
+  PHParametersContainer *paramscontainer;
   PHCompositeNode *savetopNode;
   bool overlapcheck;
   int layer;
